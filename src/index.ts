@@ -27,13 +27,35 @@ const io = new Server(server,{
     adapter: createAdapter(redis)
 })
 
-
+const users : {[key:string]:string}= {}
 
 io.on('connection',(socket) =>{
     console.log(`User Connected: ${socket.id}`);
+    console.log(users);
+
+    socket.on('register',(username) =>{
+        users[username] = socket.id;
+        console.log("user registered",users);
+    })
+
     socket.on('msg',(data) =>{
         console.log(data);
         io.emit('msg',data);
+    })
+
+    socket.on('private',({to, message}) =>{
+        const userExist = users[to];
+        console.log(JSON.stringify(message));
+        if(!userExist){
+            return;
+        }else{
+            io.to(userExist).emit('private',message);
+        }
+        
+    })
+
+    socket.on('disconnect',() =>{
+        console.log(`User Disconnected: ${socket.id}`);
     })
 })
 

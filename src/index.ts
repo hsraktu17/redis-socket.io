@@ -1,6 +1,8 @@
 import { config } from 'dotenv';
 import express, { Request, Response } from 'express';
+import { createServer } from 'http';
 import morgan from 'morgan';
+import { Server } from 'socket.io';
 
 config();
 
@@ -10,15 +12,16 @@ const port = process.env.PORT || 3000;
 app.use(express.json());
 app.use(morgan('dev'));
 
-app.get('/', (req: Request, res: Response) => {
-    res.send('Hello, world!');
-});
+const server = createServer(app);
+const io = new Server(server)
 
-app.get('/api', (req: Request, res: Response) => {
-    console.log('GET /api');
-    res.send('GET /api');
-});
+io.on('connection',(socket) =>{
+    console.log(`User Connected: ${socket.id}`);
+    io.emit('message', 'Welcome to the chat');
+})
 
-app.listen(port, () => {
+app.get('/', (req: Request, res: Response) => {res.json({ message: 'Hello World!' });});    
+
+server.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
 });

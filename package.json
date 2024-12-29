@@ -6,7 +6,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -b",
     "start": "node dist/index.js",
-    "dev": "nodemon tsc -b && src/index.ts"
+    "dev": " tsc -b &&  nodemon src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,7 +17,9 @@
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "morgan": "^1.10.0",
-    "socket.io": "^4.8.1"
+    "redis": "^4.7.0",
+    "socket.io": "^4.8.1",
+    "socket.io-redis": "^5.4.0"
   },
   "devDependencies": {
     "@types/express": "^5.0.0",

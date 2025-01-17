@@ -34,7 +34,9 @@ io.on('connection', (socket) => {
 
     socket.on('register', (username) => {
         users[username] = socket.id;
-        console.log(`User registered:`, users);
+        console.log(`User registered: ${username} -> ${socket.id}`);
+
+        socket.broadcast.emit('status', { username, status: 'online' });
     });
 
     socket.on('msg', (data) => {
@@ -47,23 +49,40 @@ io.on('connection', (socket) => {
             return socket.emit('error', 'Invalid data: "to" and "message" are required.');
         }
 
-        const userExist = users[to];
-        if (!userExist) {
-            return socket.emit('error', `User "${to}" is not registered or online.`);
+        const recipientSocketId = users[to];
+        if (!recipientSocketId) {
+            return socket.emit('error', `User "${to}" is not online.`);
         }
 
-        io.to(userExist).emit('private', { from: socket.id, message });
+        io.to(recipientSocketId).emit('private', { from: socket.id, message });
+
+        socket.emit('message_sent', { to, message });
     });
 
     socket.on('disconnect', () => {
         console.log(`User Disconnected: ${socket.id}`);
-        for (const username in users) {
-            if (users[username] === socket.id) {
-                delete users[username];
-                break;
-            }
+
+        const username = Object.keys(users).find((key) => users[key] === socket.id);
+        if (username) {
+            delete users[username];
+            console.log(`User removed: ${username}`);
+
+            socket.broadcast.emit('status', { username, status: 'offline' });
         }
-        console.log(users);
+    });
+
+    socket.on('typing', (to) => {
+        const recipientSocketId = users[to];
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit('typing', { from: socket.id });
+        }
+    });
+
+    socket.on('stop_typing', (to) => {
+        const recipientSocketId = users[to];
+        if (recipientSocketId) {
+            io.to(recipientSocketId).emit('stop_typing', { from: socket.id });
+        }
     });
 });
 
